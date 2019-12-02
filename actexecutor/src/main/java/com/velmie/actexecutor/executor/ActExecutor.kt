@@ -32,6 +32,7 @@ class ActExecutor(private val actMap: ActMap) : ActExecutorInterface {
         when (act) {
             is SimpleAct -> {
                 act.actFunction()
+                removeFromMap()
             }
             is LiveDataAct<*> -> {
                 act.liveData.observe(act.lifecycleOwner, Observer {
