@@ -2,7 +2,6 @@ package com.velmie.actexecutor.store
 
 import com.velmie.actexecutor.act.Act
 import com.velmie.actexecutor.act.Id
-import com.velmie.actexecutor.store.ActMap
 import java.util.concurrent.ConcurrentHashMap
 
 class ConcurrentActMap : ActMap {
