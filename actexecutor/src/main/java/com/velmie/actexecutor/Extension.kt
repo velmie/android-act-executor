@@ -8,7 +8,6 @@ import com.velmie.actexecutor.act.LiveDataAct
 
 fun <T : Any> LiveData<T>.toAct(
     id: Id,
-    delay: Int,
     lifecycleOwner: LifecycleOwner,
     doAfterAct: (T) -> Unit
-): Act = LiveDataAct(id, delay, this, lifecycleOwner, doAfterAct)
+): Act = LiveDataAct(id, this, lifecycleOwner, doAfterAct)

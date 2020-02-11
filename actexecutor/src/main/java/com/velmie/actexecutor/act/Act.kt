@@ -4,5 +4,4 @@ typealias Id = String
 
 interface Act {
     val id: Id
-    val delay: Int?
 }

@@ -5,7 +5,6 @@ import androidx.lifecycle.LiveData
 
 class LiveDataAct<T : Any>(
     override val id: Id,
-    override val delay: Int?,
     val liveData: LiveData<T>,
     val lifecycleOwner: LifecycleOwner,
     val doAfterAct: (T) -> Unit
