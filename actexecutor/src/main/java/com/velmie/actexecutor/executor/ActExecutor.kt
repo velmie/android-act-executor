@@ -9,13 +9,13 @@ import com.velmie.actexecutor.act.SimpleAct
 import com.velmie.actexecutor.store.ActMap
 import com.velmie.networkutils.core.Resource
 import com.velmie.networkutils.core.Status
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import timber.log.Timber
 import kotlin.system.measureTimeMillis
-
 
 class ActExecutor(private val actMap: ActMap) : ActExecutorInterface {
 
@@ -24,6 +24,8 @@ class ActExecutor(private val actMap: ActMap) : ActExecutorInterface {
             Timber.plant(Timber.DebugTree())
         }
     }
+
+    private val scope = CoroutineScope(Job())
 
     @Synchronized
     override fun execute(act: Act) {
@@ -45,7 +47,7 @@ class ActExecutor(private val actMap: ActMap) : ActExecutorInterface {
             }
             is DelayAct -> {
                 val invokeTime = measureTimeMillis { act.actFunction.invoke() }
-                GlobalScope.launch(Dispatchers.IO) {
+                scope.launch(Dispatchers.IO) {
                     delay(act.delay - invokeTime)
                     removeFromMap()
                 }
