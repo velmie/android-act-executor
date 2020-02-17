@@ -10,10 +10,9 @@ import com.velmie.actexecutor.store.ActMap
 import com.velmie.networkutils.core.Resource
 import com.velmie.networkutils.core.Status
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import kotlin.system.measureTimeMillis
 
@@ -25,13 +24,13 @@ class ActExecutor(private val actMap: ActMap) : ActExecutorInterface {
         }
     }
 
-    private val scope = CoroutineScope(Job())
+    private val scope = CoroutineScope(Dispatchers.Default)
 
     @Synchronized
     override fun execute(act: Act) {
         return when {
             actMap.contains(act.id) -> {
-                Timber.d("id: %s - Act duplicate", act.id)
+                Timber.d("id: ${act.id} - Act duplicate")
             }
             else -> startExecution(act)
         }
@@ -46,8 +45,8 @@ class ActExecutor(private val actMap: ActMap) : ActExecutorInterface {
                 removeFromMap()
             }
             is DelayAct -> {
-                val invokeTime = measureTimeMillis { act.actFunction.invoke() }
-                scope.launch(Dispatchers.IO) {
+                val invokeTime = measureTimeMillis { act.actFunction() }
+                scope.launch {
                     delay(act.delay - invokeTime)
                     removeFromMap()
                 }
@@ -67,5 +66,9 @@ class ActExecutor(private val actMap: ActMap) : ActExecutorInterface {
             }
             else -> throw IllegalArgumentException("Type Act unregistered")
         }
+    }
+
+    fun enableLogging() {
+        Timber.plant(Timber.DebugTree())
     }
 }

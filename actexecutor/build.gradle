@@ -5,7 +5,6 @@ apply plugin: 'kotlin-android-extensions'
 android {
     compileSdkVersion 29
 
-
     defaultConfig {
         minSdkVersion 22
         targetSdkVersion 29
@@ -25,8 +24,27 @@ android {
 }
 
 dependencies {
-    // dependencies are defined in ext arrays in ActExecutor/build.gradle
-    implementation libraries
-    testImplementation testLibraries
-    androidTestImplementation androidTestLibraries
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    // Kotlin standard library
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+
+    // Android core and appcompat
+    implementation "androidx.appcompat:appcompat:$appcompat_version"
+    implementation "androidx.core:core-ktx:$core_ktx_version"
+
+    // Coroutines
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_android_version"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_android_version"
+
+    // Network
+    implementation "com.github.velmie:android-network-utils:$velmie_network_utils_version"
+
+    // Event logger
+    implementation "com.jakewharton.timber:timber:$timber_version"
+
+    // Testing
+    implementation "junit:junit:$junit_version"
+    implementation "androidx.test.ext:junit:$ext_junit_version"
+    implementation "androidx.test.espresso:espresso-core:$expresso_version"
 }
