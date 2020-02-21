@@ -60,7 +60,10 @@ class ActExecutor(private val actMap: ActMap) : ActExecutorInterface {
                                 removeFromMap()
                             }
                         }
-                        else -> throw IllegalArgumentException("Type T in LiveData<T> unregistered")
+                        else -> {
+                            removeFromMap()
+                            throw IllegalArgumentException("Type T in LiveData<T> unregistered")
+                        }
                     }
                 })
             }
