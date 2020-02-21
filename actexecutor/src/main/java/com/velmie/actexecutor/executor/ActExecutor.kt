@@ -1,26 +1,36 @@
 package com.velmie.actexecutor.executor
 
-import android.util.Log
 import androidx.lifecycle.Observer
+import com.velmie.actexecutor.BuildConfig
 import com.velmie.actexecutor.act.Act
+import com.velmie.actexecutor.act.DelayAct
 import com.velmie.actexecutor.act.LiveDataAct
 import com.velmie.actexecutor.act.SimpleAct
 import com.velmie.actexecutor.store.ActMap
 import com.velmie.networkutils.core.Resource
 import com.velmie.networkutils.core.Status
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import timber.log.Timber
+import kotlin.system.measureTimeMillis
 
 class ActExecutor(private val actMap: ActMap) : ActExecutorInterface {
 
-    companion object {
-        val TAG = "ActExecutor"
+    init {
+        if (BuildConfig.DEBUG) {
+            Timber.plant(Timber.DebugTree())
+        }
     }
+
+    private val scope = CoroutineScope(Dispatchers.Default)
 
     @Synchronized
     override fun execute(act: Act) {
         return when {
             actMap.contains(act.id) -> {
-                Log.d(TAG, "${act.id} - Act duplicate")
-                Unit
+                Timber.d("id: ${act.id} - Act duplicate")
             }
             else -> startExecution(act)
         }
@@ -33,6 +43,13 @@ class ActExecutor(private val actMap: ActMap) : ActExecutorInterface {
             is SimpleAct -> {
                 act.actFunction()
                 removeFromMap()
+            }
+            is DelayAct -> {
+                val invokeTime = measureTimeMillis { act.actFunction() }
+                scope.launch {
+                    delay(act.delay - invokeTime)
+                    removeFromMap()
+                }
             }
             is LiveDataAct<*> -> {
                 act.liveData.observe(act.lifecycleOwner, Observer {
@@ -49,5 +66,9 @@ class ActExecutor(private val actMap: ActMap) : ActExecutorInterface {
             }
             else -> throw IllegalArgumentException("Type Act unregistered")
         }
+    }
+
+    fun enableLogging() {
+        Timber.plant(Timber.DebugTree())
     }
 }
