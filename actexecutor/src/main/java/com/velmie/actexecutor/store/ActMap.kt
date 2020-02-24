@@ -8,4 +8,9 @@ interface ActMap {
     fun add(id: Id, act: Act)
     fun remove(id: Id)
     fun removeAll()
+    fun replace(id: Id, act: Act)
+    fun getFirstKey(): Id
+    fun getFirstValue(): Act
+    fun isNotEmpty(): Boolean
+    fun size(): Int
 }
