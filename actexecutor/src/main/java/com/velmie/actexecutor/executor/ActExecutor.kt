@@ -7,8 +7,9 @@ import com.velmie.actexecutor.act.DelayAct
 import com.velmie.actexecutor.act.LiveDataAct
 import com.velmie.actexecutor.act.SimpleAct
 import com.velmie.actexecutor.store.ActMap
+import com.velmie.networkutils.core.Error
 import com.velmie.networkutils.core.Resource
-import com.velmie.networkutils.core.Status
+import com.velmie.networkutils.core.Success
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -56,7 +57,7 @@ class ActExecutor(private val actMap: ActMap) : ActExecutorInterface {
                     when (it) {
                         is Resource<*> -> {
                             act.afterAct(it)
-                            if (it.status == Status.ERROR || it.status == Status.SUCCESS) {
+                            if (it is Error<*> || it is Success<*>) {
                                 removeFromMap()
                             }
                         }
