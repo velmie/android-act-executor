@@ -1,3 +1,7 @@
+plugins {
+    id 'maven-publish'
+}
+
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
@@ -48,4 +52,34 @@ dependencies {
     implementation "junit:junit:$junit_version"
     implementation "androidx.test.ext:junit:1.1.4-alpha05"
     implementation "androidx.test.espresso:espresso-core:$expresso_version"
+}
+
+afterEvaluate {
+    publishing {
+        repositories {
+            maven {
+                name = "android-act-executor"
+                url = uri("https://maven.pkg.github.com/velmie/android-act-executor")
+                credentials {
+                    Properties properties = new Properties()
+                    def propertiesFile = project.rootProject.file('local.properties')
+                    if (propertiesFile.exists()) {
+                        properties.load(propertiesFile.newDataInputStream())
+                    }
+                    username = properties.getProperty('GITHUB_USER') ?: System.env.GITHUB_USER
+                    password = properties.getProperty('GITHUB_PACKAGE_TOKEN') ?: System.env.GITHUB_TOKEN
+                }
+            }
+        }
+
+        publications {
+            release(MavenPublication) {
+                from components.release
+
+                groupId "com.velmie.actexecutor"
+                artifactId 'android-act-executor'
+                version "0.2.0-rc1"
+            }
+        }
+    }
 }
