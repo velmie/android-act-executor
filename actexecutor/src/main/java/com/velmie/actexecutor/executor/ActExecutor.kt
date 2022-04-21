@@ -1,19 +1,12 @@
 package com.velmie.actexecutor.executor
 
-import androidx.lifecycle.Observer
 import com.velmie.actexecutor.BuildConfig
-import com.velmie.actexecutor.act.Act
-import com.velmie.actexecutor.act.DelayAct
-import com.velmie.actexecutor.act.LiveDataAct
-import com.velmie.actexecutor.act.SimpleAct
+import com.velmie.actexecutor.act.*
 import com.velmie.actexecutor.store.ActMap
 import com.velmie.networkutils.core.Error
 import com.velmie.networkutils.core.Resource
 import com.velmie.networkutils.core.Success
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import timber.log.Timber
 import kotlin.system.measureTimeMillis
 
@@ -48,12 +41,33 @@ class ActExecutor(private val actMap: ActMap) : ActExecutorInterface {
             is DelayAct -> {
                 val invokeTime = measureTimeMillis { act.actFunction() }
                 scope.launch {
-                    delay(act.delay - invokeTime)
-                    removeFromMap()
+                    withContext(Dispatchers.IO) {
+                        delay(act.delay - invokeTime)
+                        removeFromMap()
+                    }
+                }
+            }
+            is FlowAct<*> -> {
+                act.coroutineScope.launch {
+                    act.flow.collect {
+                        when (it) {
+                            is Resource<*> -> {
+                                act.afterAct(it)
+                                if (it is Error<*> || it is Success<*>) {
+                                    removeFromMap()
+                                    cancel()
+                                }
+                            }
+                            else -> {
+                                removeFromMap()
+                                throw IllegalArgumentException("Type T in Flow<T> unregistered")
+                            }
+                        }
+                    }
                 }
             }
             is LiveDataAct<*> -> {
-                act.liveData.observe(act.lifecycleOwner, Observer {
+                act.liveData.observe(act.lifecycleOwner) {
                     when (it) {
                         is Resource<*> -> {
                             act.afterAct(it)
@@ -66,7 +80,7 @@ class ActExecutor(private val actMap: ActMap) : ActExecutorInterface {
                             throw IllegalArgumentException("Type T in LiveData<T> unregistered")
                         }
                     }
-                })
+                }
             }
             else -> throw IllegalArgumentException("Type Act unregistered")
         }
