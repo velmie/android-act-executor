@@ -20,18 +20,30 @@ class ActExecutor(private val actMap: ActMap) : ActExecutorInterface {
 
     private val scope = CoroutineScope(Dispatchers.Default)
 
-    @Synchronized
     override fun execute(act: Act) {
-        return when {
-            actMap.contains(act.id) -> {
-                Timber.d("id: ${act.id} - Act duplicate")
+        scope.launch {
+            if (actMap.contains(act.id)) {
+                when (act.actPolicy) {
+                    ActPolicy.DEFAULT -> Timber.d("id: ${act.id} - Act duplicate")
+                    ActPolicy.REPLACE -> {
+                        actMap.replace(act.id, startExecution(act))
+                        Timber.d("id: ${act.id} - Act was replaced")
+                    }
+                    ActPolicy.IN_LINE -> {
+                        while (actMap.contains(act.id)) {
+                            delay(100)
+                        }
+                        actMap.add(act.id, startExecution(act))
+                        Timber.d("id: ${act.id} - Act duplicate")
+                    }
+                }
+            } else {
+                actMap.add(act.id, startExecution(act))
             }
-            else -> startExecution(act)
         }
     }
 
-    private fun startExecution(act: Act) {
-        actMap.add(act.id, act)
+    private suspend fun startExecution(act: Act) = scope.launch {
         val removeFromMap = { actMap.remove(act.id) }
         when (act) {
             is SimpleAct -> {
@@ -40,7 +52,7 @@ class ActExecutor(private val actMap: ActMap) : ActExecutorInterface {
             }
             is DelayAct -> {
                 val invokeTime = measureTimeMillis { act.actFunction() }
-                scope.launch {
+                withContext(scope.coroutineContext) {
                     withContext(Dispatchers.IO) {
                         delay(act.delay - invokeTime)
                         removeFromMap()
@@ -84,6 +96,7 @@ class ActExecutor(private val actMap: ActMap) : ActExecutorInterface {
             }
             else -> throw IllegalArgumentException("Type Act unregistered")
         }
+        joinAll()
     }
 
     fun enableLogging() {

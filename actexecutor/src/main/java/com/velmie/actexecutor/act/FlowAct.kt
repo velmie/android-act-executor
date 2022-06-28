@@ -7,6 +7,7 @@ class FlowAct<T : Any>(
     override val id: Id,
     val flow: Flow<T>,
     val coroutineScope: CoroutineScope,
+    override val actPolicy: ActPolicy = ActPolicy.DEFAULT,
     val doAfterAct: (T) -> Unit
 ) : Act {
 

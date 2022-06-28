@@ -7,6 +7,7 @@ class LiveDataAct<T : Any>(
     override val id: Id,
     val liveData: LiveData<T>,
     val lifecycleOwner: LifecycleOwner,
+    override val actPolicy: ActPolicy = ActPolicy.DEFAULT,
     val doAfterAct: (T) -> Unit
 ) : Act {
 
